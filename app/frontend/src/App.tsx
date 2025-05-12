@@ -3,6 +3,7 @@ import './App.css'
 import { Button } from './components/ui/button'
 import { Input } from './components/ui/input'
 import reactLogo from './assets/react.svg'
+import { useClient } from './useClient'
 
 function App() {
   const [messages, setMessages] = useState([
@@ -10,29 +11,41 @@ function App() {
   ])
   const [input, setInput] = useState('')
   const chatEndRef = useRef<HTMLDivElement | null>(null)
+  const { jobSpec, sendMessage, confirmJobSpec, dismissJobSpec } = useClient()
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+  }, [messages, jobSpec])
 
-  const sendMessage = () => {
-    if (!input.trim()) return
+  const handleSend = async (overrideInput?: string) => {
+    const messageToSend = overrideInput ?? input;
+    if (!messageToSend.trim()) return;
     setMessages((msgs) => [
       ...msgs,
-      { sender: 'user', text: input }
+      { sender: 'user', text: messageToSend }
     ])
     setInput('')
-    // Simulate bot reply
-    setTimeout(() => {
+    await sendMessage(messageToSend, (botMsg) => {
       setMessages((msgs) => [
         ...msgs,
-        { sender: 'bot', text: "I'm a bot! You said: " + input }
+        { sender: 'bot', text: botMsg }
       ])
-    }, 600)
+    })
   }
 
+  const handleConfirm = async () => {
+    await confirmJobSpec((botMsg) => {
+      setMessages((msgs) => [
+        ...msgs,
+        { sender: 'bot', text: botMsg }
+      ])
+    })
+  }
+
+  const handleDismiss = dismissJobSpec
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') sendMessage()
+    if (e.key === 'Enter') handleSend()
   }
 
   return (
@@ -50,18 +63,29 @@ function App() {
             >
               <div
                 className={`rounded-lg px-4 py-2 max-w-xs break-words shadow text-sm ${msg.sender === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-900 border'}`}
+                style={{ textAlign: 'left' }}
               >
                 {msg.text}
               </div>
             </div>
           ))}
+          {jobSpec && (
+            <div className="mt-4 p-3 bg-yellow-50 border border-yellow-300 rounded text-xs text-gray-800 max-w-full flex flex-col items-start">
+              <div className="font-semibold mb-1">Job Spec Preview:</div>
+              <pre className="whitespace-pre-wrap break-words text-left w-full">{JSON.stringify(jobSpec, null, 2)}</pre>
+              <div className="flex gap-2 mt-2">
+                <Button onClick={handleConfirm}>Confirm</Button>
+                <Button variant="ghost" onClick={handleDismiss}>Dismiss</Button>
+              </div>
+            </div>
+          )}
           <div ref={chatEndRef} />
         </div>
         <form
           className="flex items-center gap-2 p-4 border-t bg-white"
-          onSubmit={e => {
+          onSubmit={async e => {
             e.preventDefault();
-            sendMessage();
+            await handleSend();
           }}
         >
           <Input
