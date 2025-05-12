@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import './App.css'
 import { Button } from './components/ui/button'
 import { Input } from './components/ui/input'
+import reactLogo from './assets/react.svg'
 
 function App() {
   const [messages, setMessages] = useState([
@@ -37,7 +38,8 @@ function App() {
   return (
     <div className="flex flex-col w-full bg-gray-100">
       <div className="flex flex-col max-w-xl w-full mx-auto shadow-lg border bg-white h-full">
-        <header className="px-6 py-4 border-b bg-white/80 backdrop-blur sticky top-0 z-10">
+        <header className="px-6 py-4 border-b bg-white/80 backdrop-blur sticky top-0 z-10 flex items-center gap-3">
+          <img src={reactLogo} alt="React logo" className="h-7 w-7" />
           <h1 className="text-xl font-bold tracking-tight text-gray-900">Deck Studio</h1>
         </header>
         <div className="flex-1 overflow-y-auto p-4 space-y-2">
