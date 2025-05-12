@@ -1,8 +1,8 @@
 namespace DeckStudio.Handlers;
 
-public static class AwaitingBankHandler
+public class AwaitingBankHandler : IStateHandler
 {
-    public static (string response, object? jobSpec, ConversationState newState) Handle(UserMessageWithId message, ConversationState state)
+    public (string response, object? jobSpec, ConversationState newState) Handle(UserMessageWithId message, ConversationState state)
     {
         return ("What do you need: transactions, balances, or both?", null, state with { Step = "awaiting_data_type", Bank = message.Message.Trim() });
     }

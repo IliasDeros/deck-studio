@@ -1,8 +1,8 @@
 namespace DeckStudio.Handlers;
 
-public static class StartHandler
+public class StartHandler : IStateHandler
 {
-    public static (string response, object? jobSpec, ConversationState newState) Handle(UserMessageWithId message, ConversationState state)
+    public (string response, object? jobSpec, ConversationState newState) Handle(UserMessageWithId message, ConversationState state)
     {
         if (message.Message.Trim().Equals("I want bank data", StringComparison.OrdinalIgnoreCase))
         {

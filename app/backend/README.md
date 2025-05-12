@@ -19,7 +19,14 @@
 - Returns the most recently confirmed job spec as JSON (including the `submitted_at` field).
 - If no job spec exists, returns 404.
 
----
+## Code Structure
+
+- `AiController.cs` - Acts as a state machine to manage a conversation with the AI.
+- `JobController.cs` - Manages job specs and their submission.
+- `LatestController.cs` - Returns the last job spec that submitted to JobController.
+
+
+# Usage:
 
 ```sh
 dotnet watch run # http://127.0.0.1:5270/swagger/index.html

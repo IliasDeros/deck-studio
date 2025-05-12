@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using DeckStudio.Handlers;
 
 [ApiController]
@@ -8,34 +9,32 @@ public class AiController : ControllerBase
 {
     private static readonly ConcurrentDictionary<string, ConversationState> conversationStates = new();
 
+    private static readonly Dictionary<string, IStateHandler> handlers = new()
+    {
+        { "start", new StartHandler() },
+        { "awaiting_bank", new AwaitingBankHandler() },
+        { "awaiting_data_type", new AwaitingDataTypeHandler() },
+        { "awaiting_confirm", new AwaitingConfirmHandler() },
+        { "done", new DoneHandler() }
+    };
+
     [HttpPost]
     public IActionResult Post([FromBody] UserMessageWithId message)
     {
         string convId = message.Id ?? Guid.NewGuid().ToString();
         var state = conversationStates.GetOrAdd(convId, _ => new ConversationState("start"));
-        string response = "";
-        object? jobSpec = null;
+        string response;
+        object? jobSpec;
         ConversationState newState = state;
-        switch (state.Step)
+
+        if (handlers.TryGetValue(state.Step, out var handler))
         {
-            case "start":
-                (response, jobSpec, newState) = StartHandler.Handle(message, state);
-                break;
-            case "awaiting_bank":
-                (response, jobSpec, newState) = AwaitingBankHandler.Handle(message, state);
-                break;
-            case "awaiting_data_type":
-                (response, jobSpec, newState) = AwaitingDataTypeHandler.Handle(message, state);
-                break;
-            case "awaiting_confirm":
-                (response, jobSpec, newState) = AwaitingConfirmHandler.Handle(message, state);
-                break;
-            case "done":
-                (response, jobSpec, newState) = DoneHandler.Handle(message, state);
-                break;
-            default:
-                response = "Sorry, I didn't understand that.";
-                break;
+            (response, jobSpec, newState) = handler.Handle(message, state);
+        }
+        else
+        {
+            response = "Sorry, I didn't understand that.";
+            jobSpec = null;
         }
         conversationStates[convId] = newState;
         return Ok(new { response, jobSpec, id = convId });
